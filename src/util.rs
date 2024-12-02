@@ -18,7 +18,7 @@ pub fn load_file(
     let teststr = if test { "test_" } else { "" };
 
     let path = std::format!("inputs/day{day}/{teststr}input{part}.txt");
-    println!("loading data from '{}'", path);
+    // println!("loading data from '{}'", path);
     std::fs::read_to_string(path)
 }
 

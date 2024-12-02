@@ -8,4 +8,14 @@ nalgebra = "0.33.2"
 
 
 [[bin]]
+name = "day2"
+[[bin]]
 name = "day1"
+
+[default-run]
+name = "day1"
+
+
+[profile.samply]
+inherits = "release"
+debug = true
