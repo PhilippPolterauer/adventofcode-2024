@@ -61,7 +61,7 @@ fn part1() {
         }
     }
 
-    dbg!(solution);
+    // dbg!(solution);
 }
 
 fn part2() {
@@ -69,13 +69,13 @@ fn part2() {
 
     let mut solution = 0;
     for l in input.lines() {
-        let line: Vec<i32> = l.split(" ").filter_map(|c| c.parse::<i32>().ok()).collect();
+        let line: Vec<i32> = l.split(" ").map(|c| c.parse::<i32>().unwrap()).collect();
         if is_safe2(&line, None) {
             solution += 1;
         }
     }
 
-    dbg!(solution);
+    // dbg!(solution);
 }
 fn is_safe_corr(line: &[i32]) -> bool {
     for index in 0..line.len() {
@@ -99,16 +99,18 @@ fn part2corr() {
         }
     }
 
-    dbg!(solution);
+    // dbg!(solution);
 }
 fn main() {
-    part1();
-    let tcorr = Instant::now();
-    part2corr();
-    let dtcorr = Instant::now() - tcorr;
-    dbg!(dtcorr);
-    let tstart = Instant::now();
-    part2();
-    let dtfast = Instant::now() - tstart;
-    dbg!(dtfast);
+    for _ in 0..10000 {
+        part1();
+        let tcorr = Instant::now();
+        part2corr();
+        let dtcorr = Instant::now() - tcorr;
+        // dbg!(dtcorr);
+        let tstart = Instant::now();
+        part2();
+        let dtfast = Instant::now() - tstart;
+        // dbg!(dtfast);
+    }
 }
