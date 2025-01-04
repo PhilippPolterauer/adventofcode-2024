@@ -1,7 +1,5 @@
-use std::{cmp::min_by_key, marker, ops::Mul};
-
 use adventofcode2024::util;
-use regex::{Match, Regex, RegexSet};
+use regex::Regex;
 
 fn part1() -> i32 {
     let re = Regex::new(r"mul\(([0-9]{1,3}),([0-9]{1,3})\)").unwrap();
@@ -19,100 +17,66 @@ fn part1() -> i32 {
     return solution;
 }
 // write a tokenizer where i can decleratively declare tokens the can appear within a text
-
+#[derive(Debug)]
 enum Tokens {
     Do,
     Dont,
     Mul(i32, i32),
-    End,
 }
 
-// think about how we want to use  
-pub trait IsToken<'a>{
+// think about how we want to use
+pub trait IsToken<'a> {
     type MatchType;
     fn find_at(&self, haystack: &'a str, start: usize) -> Self::MatchType;
-
 }
 
-// struct RegexToken{
-//     regex: Regex,
-//     // _owns_t: marker::PhantomData<T>
-// }
-// impl <'a, T> RegexToken {
-//     fn new(regex: &str)-> Self{        
-//         Self { regex: Regex::new(regex).unwrap() }       
-//     }
-//     fn find_at(&self, haystack: &'a str, start: usize) -> Option<Match<'a>> {
-//         self.regex.find_at(haystack, start)
-//     }
-// }
-// struct DoToken (RegexToken);
+fn part2() -> i32 {
+    let mulre = Regex::new(r"mul\(([0-9]{1,3}),([0-9]{1,3})\)").unwrap();
+    let dore = Regex::new(r"do\(\)").unwrap();
+    let dontre = Regex::new(r"don't\(\)").unwrap();
 
+    let file = util::load_file(3, 1, false);
+    let mut solution = 0;
 
-// impl <'a> IsToken<'a> for RegexToken{
-//     type MatchType = T;
-//     fn find_at(&self, haystack: &'a str, start: usize) -> T {
-//         self.regex.find_at(haystack, start)
-//     }
-// }
+    let mut tokens = Vec::new();
+    if let Ok(content) = file {
+        for m in dore.find_iter(&content) {
+            tokens.push((m.start(), Tokens::Do));
+        }
 
-
-
-// fn find(haystack: &str, start: usize, regexes: &[Regexes]) -> (usize, Matches) {
-//     if let Some(min) = regexes
-//         .iter()
-//         .filter_map(|regex| match &regex {
-//             Regexes::Do(reg) | Regexes::Dont(reg) | Regexes::Mul(reg) => {
-//                 let mat = reg.find_at(haystack, start);
-//                 match regex { 
-//                 }
-//             }
-//         })
-//         .min_by_key(|mat| mat.start())
-//     {
-//         return min.start(), 
-//     }
-
-//     return (0, Matches::End);
-// }
-
-// fn part2() -> i32 {
-//     let mulre = r"mul\(([0-9]{1,3}),([0-9]{1,3})\)";
-//     let dore = r"do\(\)";
-//     let dontre = r"don't\(\)";
-//     let regexes = [
-//         Regexes::Do(Regex::new(dore).unwrap()),
-//         Regexes::Dont(Regex::new(dontre).unwrap()),
-//         Regexes::Mul(Regex::new(mulre).unwrap()),
-//     ];
-
-//     let file = util::load_file(3, 1, false);
-//     let mut solution = 0;
-
-//     let mut start = 0;
-//     let mut state = MulState::Do;
-//     if let Ok(file) = file {
-//         loop {
-//             let (idx, mat) = find(&file, start);
-//             state = match (&state, &mat) {
-//                 (_, Matches::End) => break,
-//                 (MulState::Do, Matches::Dont) => MulState::Dont,
-//                 (MulState::Dont, Matches::Do) => MulState::Do,
-//                 (MulState::Do, Matches::Mul(a, b)) => {
-//                     solution += a * b;
-//                     MulState::Do
-//                 }
-//                 _ => state,
-//             };
-//             start = idx;
-//         }
-//     }
-//     return solution;
-// }
+        for m in dontre.find_iter(&content) {
+            tokens.push((m.start(), Tokens::Dont));
+        }
+        for m in mulre.find_iter(&content) {
+            let cap = mulre.captures_at(&content, m.start());
+            if let Some(cap) = cap {
+                if let (Some(a), Some(b)) = (cap.get(1), cap.get(2)) {
+                    if let (Ok(ra), Ok(rb)) = (a.as_str().parse::<i32>(), b.as_str().parse::<i32>())
+                    {
+                        tokens.push((m.start(), Tokens::Mul(ra, rb)));
+                    }
+                }
+            }
+        }
+    }
+    tokens.sort_by_key(|(s, _)| *s);
+    let mut enabled = true;
+    for (_, token) in tokens {
+        let (next, change) = match (enabled, token) {
+            (true, Tokens::Mul(a, b)) => (true, a * b),
+            (true, Tokens::Dont) => (false, 0),
+            (false, Tokens::Do) => (true, 0),
+            _ => (enabled, 0),
+        };
+        solution += change;
+        enabled = next;
+    }
+    return solution;
+}
 
 fn main() {
     let solution = part1();
     dbg!(solution);
-    // let solution = part2();
+    let solution = part2();
     dbg!(solution);
 }
