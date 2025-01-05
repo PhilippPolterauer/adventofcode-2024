@@ -1,11 +1,9 @@
 use adventofcode2024::util::{load_file, MatrixIdx};
-
 use std::ops::{Add, Index, IndexMut};
-trait FromChar: Sized {
+pub(crate) trait FromChar: Sized {
     fn try_from_char(char: &char) -> Option<Self>;
 }
-pub trait MatrixElement: FromChar + Clone + PartialEq {}
-trait Direction {}
+pub(crate) trait MatrixElement: FromChar + Clone + PartialEq {}
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct MatrixIdxOffset {
@@ -18,6 +16,25 @@ impl MatrixIdxOffset {
     }
 }
 
+struct IdxValueIterator<'a, T: MatrixElement> {
+    count: usize,
+    matrix: &'a Matrix<T>,
+}
+impl<'a, T: MatrixElement> IdxValueIterator<'a, T> {
+    fn new(matrix: &'a Matrix<T>) -> Self {
+        Self { count: 0, matrix }
+    }
+}
+
+impl<'a, T: MatrixElement> Iterator for IdxValueIterator<'a, T> {
+    type Item = (MatrixIdx, &'a T);
+    fn next(&mut self) -> Option<Self::Item> {
+        let count = self.count;
+        let ret = self.matrix.idx_value_from_linidx(count);
+        self.count += 1;
+        ret
+    }
+}
 struct IdxIterator<'a, T: MatrixElement> {
     count: usize,
     matrix: &'a Matrix<T>,
@@ -34,8 +51,8 @@ impl<'a, T: MatrixElement> Iterator for IdxIterator<'a, T> {
     fn next(&mut self) -> Option<Self::Item> {
         let count = self.count;
         self.count += 1;
-        if count < self.matrix.data.len() {
-            Some(self.matrix.idx_from_lin(count))
+        if count <= self.matrix.data.len() {
+            Some(self.matrix.idx_from_lin(count - 1))
         } else {
             None
         }
@@ -43,7 +60,7 @@ impl<'a, T: MatrixElement> Iterator for IdxIterator<'a, T> {
 }
 
 #[derive(Debug)]
-pub struct Matrix<T>
+pub(crate) struct Matrix<T>
 where
     T: MatrixElement,
 {
@@ -73,7 +90,7 @@ where
     fn get_lin(&self, linidx: usize) -> Option<&T> {
         self.data.get(linidx)
     }
-    pub fn try_from_string(input: &str) -> Option<Self> {
+    pub fn try_from_str(input: &str) -> Option<Self> {
         let mut data = Vec::new();
         let mut width: Option<usize> = None;
         for line in input.lines() {
@@ -96,6 +113,10 @@ where
             row: (linidx / self.width),
             col: (linidx % self.width),
         }
+    }
+    fn idx_value_from_linidx(&self, linidx: usize) -> Option<(MatrixIdx, &T)> {
+        self.get_lin(linidx)
+            .and_then(|elem| Some((self.idx_from_lin(linidx), elem)))
     }
     pub fn height(&self) -> usize {
         self.data.len() / self.width
@@ -120,6 +141,10 @@ where
             col: col.rem_euclid(width),
         }]
     }
+    pub fn idx_value_iter(&'a self) -> IdxValueIterator<'a, T> {
+        IdxValueIterator::new(self)
+    }
+    /// Returns the indizes of this [`Matrix<T>`].
     pub fn indizes(&'a self) -> IdxIterator<'a, T> {
         IdxIterator::new(self)
     }
@@ -170,6 +195,17 @@ enum XmasItems {
     A,
     S,
 }
+impl XmasItems {
+    fn next(&self) -> Option<XmasItems> {
+        use XmasItems::*;
+        match self {
+            X => Some(M),
+            M => Some(A),
+            A => Some(S),
+            S => None,
+        }
+    }
+}
 
 impl Add<&MatrixIdxOffset> for &MatrixIdx {
     type Output = MatrixIdx;
@@ -211,40 +247,36 @@ impl FromChar for XmasItems {
         }
     }
 }
-#[derive(Debug)]
-struct XmasSearcher {
-    dir: Option<MatrixIdxOffset>,
-    next_item: XmasItems,
-    count: usize,
-}
-impl Default for XmasSearcher {
-    fn default() -> Self {
-        XmasSearcher {
-            dir: None,
-            next_item: XmasItems::X,
-            count: 0,
-        }
-    }
-}
-trait Searcher<G: Graph> {
-    fn search(&mut self, graph: &G, node_id: &G::NodeIdT, edge: &G::EdgeT) -> bool;
-}
-
-trait Graph: Sized {
-    type EdgeT;
-    type NodeIdT;
-    fn next(&self, node_id: &Self::NodeIdT, edge: &Self::EdgeT) -> Option<Self::NodeIdT>;
-    fn edges(&self, node_id: &Self::NodeIdT) -> Vec<&Self::EdgeT>;
-    fn depth_first_search<S: Searcher<Self>>(&self, node_id: &Self::NodeIdT, searcher: &mut S) {
-        for edge in self.edges(node_id) {
-            if let Some(next) = self.next(node_id, edge) {
-                if searcher.search(self, node_id, edge) {
-                    self.depth_first_search(&next, searcher);
-                }
-            }
-        }
-    }
-}
+//#[derive(Debug)]
+//struct XmasSearcher {
+//    dir: Option<MatrixIdxOffset>,
+//    next_item: XmasItems,
+//    count: usize,
+//}
+//impl Default for XmasSearcher {
+//    fn default() -> Self {
+//        XmasSearcher {
+//            dir: None,
+//            next_item: XmasItems::X,
+//            count: 0,
+//        }
+//    }
+//}
+//    fn traverse(
+//        &mut self,
+//        graph: &Matrix<XmasItems>,
+//        node_id: &<Matrix<XmasItems> as Graph>::NodeIdT,
+//        edge: &<Matrix<XmasItems> as Graph>::EdgeT,
+//    ) -> bool;
+//}
+//
+//trait Graph: Sized {
+//    type EdgeT;
+//    type NodeIdT;
+//    fn next(&self, node_id: &Self::NodeIdT, edge: &Self::EdgeT) -> Option<Self::NodeIdT>;
+//    fn edges(&self, node_id: &Self::NodeIdT) -> Vec<&Self::EdgeT>;
+//    fn traverse<T: GraphTraverselStrategy>(&self, strategy: T) {}
+//}
 
 const DIRECTIONS: [MatrixIdxOffset; 8] = [
     MatrixIdxOffset::new(0, -1),
@@ -256,71 +288,102 @@ const DIRECTIONS: [MatrixIdxOffset; 8] = [
     MatrixIdxOffset::new(-1, 0),
     MatrixIdxOffset::new(-1, 1),
 ];
-impl Graph for Matrix<XmasItems> {
-    type EdgeT = MatrixIdxOffset;
-    type NodeIdT = MatrixIdx;
-    fn next(&self, start: &Self::NodeIdT, edge: &Self::EdgeT) -> Option<Self::NodeIdT> {
-        let nidx = start + edge;
-        if self.is_valid_idx(&nidx) {
-            Some(nidx)
-        } else {
-            None
-        }
-    }
-    fn edges(&self, node_id: &Self::NodeIdT) -> Vec<&MatrixIdxOffset> {
-        DIRECTIONS
-            .iter()
-            .filter_map(|d| {
-                let nidx = node_id + d;
-                if self.is_valid_idx(&nidx) {
-                    Some(d)
-                } else {
-                    None
-                }
-            })
-            .collect()
-    }
-}
+//impl Graph for Matrix<XmasItems> {
+//    type EdgeT = MatrixIdxOffset;
+//    type NodeIdT = MatrixIdx;
+//    fn next(&self, start: &Self::NodeIdT, edge: &Self::EdgeT) -> Option<Self::NodeIdT> {
+//        let nidx = start + edge;
+//        if self.is_valid_idx(&nidx) {
+//            Some(nidx)
+//        } else {
+//            None
+//        }
+//    }
+//    fn edges(&self, node_id: &Self::NodeIdT) -> Vec<&MatrixIdxOffset> {
+//        let iter = DIRECTIONS.iter();
+//        iter.filter_map(|d| {
+//            let nidx = node_id + d;
+//            if self.is_valid_idx(&nidx) {
+//                Some(d)
+//            } else {
+//                None
+//            }
+//        })
+//        .collect()
+//    }
+//}
 
-impl Searcher<Matrix<XmasItems>> for XmasSearcher {
-    fn search(
-        &mut self,
-        graph: &Matrix<XmasItems>,
-        node_id: &MatrixIdx,
-        edge: &MatrixIdxOffset,
-    ) -> bool {
-        let dir = self.dir.get_or_insert(*edge);
-        if edge != dir {
-            return false;
-        }
-        if let Some(node) = graph.get(node_id) {
-            if node == &self.next_item {
-                self.next_item = match node {
-                    XmasItems::X => XmasItems::M,
-                    XmasItems::M => XmasItems::A,
-                    XmasItems::A => XmasItems::S,
-                    XmasItems::S => {
-                        self.count += 1;
-                        return false;
-                    }
-                };
-                return true;
-            }
-        }
-        false
-    }
+fn check_xmas(
+    matrix: &Matrix<XmasItems>,
+    expected: XmasItems,
+    start: MatrixIdx,
+    direction: MatrixIdxOffset,
+) -> bool {
+    let next_index = start + direction;
+    matrix.get(&next_index).is_some_and(|item| {
+        item == &expected
+            && item.next().is_none_or(|next_expected| {
+                check_xmas(matrix, next_expected, next_index, direction)
+            })
+    })
 }
 
 fn main() {
-    let input_text = load_file(4, 1, true).expect("failed to load input text file");
+    let input_text = load_file(4, 1, false).expect("failed to load input text file");
     let matrix =
-        Matrix::<XmasItems>::try_from_string(&input_text).expect("parsing into matrix failed");
-    // i need to fix the search algorithm it currently uses the wrong dir that is defined by the first run 
-    // i think the search should be somehow differently implemented
-    for idx in matrix.indizes() {
-        let mut xmas_search = XmasSearcher::default();
-        matrix.depth_first_search(&idx, &mut xmas_search);
-        
-        dbg!(idx, xmas_search);
+        Matrix::<XmasItems>::try_from_str(&input_text).expect("parsing into matrix failed");
+    let mut solution = 0;
+    for (idx, value) in matrix.idx_value_iter() {
+        if value == &XmasItems::X {
+            let expected = XmasItems::M;
+            for direction in DIRECTIONS {
+                if check_xmas(&matrix, expected, idx, direction) {
+                    solution += 1;
+                }
+            }
+        }
+    }
+    dbg!(solution);
+}
+
+#[cfg(test)]
+mod test {
+    use crate::check_xmas;
+
+    use super::*;
+    #[test]
+    fn test_xmas_check() {
+        // XMASS
+        // MMSAA
+        // ASAMM
+        // SXMSX
+        let matrix = Matrix::<XmasItems>::try_from_str("XMASS\nMMSAA\nASAMM\nSXMSX").unwrap();
+        assert_eq!(
+            check_xmas(
+                &matrix,
+                XmasItems::M,
+                MatrixIdx::new(0, 0),
+                MatrixIdxOffset::new(0, 1)
+            ),
+            true
+        );
+        assert!(check_xmas(
+            &matrix,
+            XmasItems::M,
+            MatrixIdx::new(0, 0),
+            MatrixIdxOffset::new(1, 1)
+        ));
+        assert!(check_xmas(
+            &matrix,
+            XmasItems::M,
+            MatrixIdx::new(0, 0),
+            MatrixIdxOffset::new(1, 0)
+        ));
+        assert!(check_xmas(
+            &matrix,
+            XmasItems::M,
+            MatrixIdx::new(3, 4),
+            MatrixIdxOffset::new(-1, 0)
+        ));
     }
 }
