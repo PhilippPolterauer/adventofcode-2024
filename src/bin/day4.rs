@@ -1,191 +1,5 @@
-use adventofcode2024::util::{load_file, MatrixIdx};
-use std::ops::{Add, Index, IndexMut};
-pub(crate) trait FromChar: Sized {
-    fn try_from_char(char: &char) -> Option<Self>;
-}
-pub(crate) trait MatrixElement: FromChar + Clone + PartialEq {}
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub struct MatrixIdxOffset {
-    pub rows: i64,
-    pub cols: i64,
-}
-impl MatrixIdxOffset {
-    pub const fn new(rows: i64, cols: i64) -> Self {
-        MatrixIdxOffset { rows, cols }
-    }
-}
-
-struct IdxValueIterator<'a, T: MatrixElement> {
-    count: usize,
-    matrix: &'a Matrix<T>,
-}
-impl<'a, T: MatrixElement> IdxValueIterator<'a, T> {
-    fn new(matrix: &'a Matrix<T>) -> Self {
-        Self { count: 0, matrix }
-    }
-}
-
-impl<'a, T: MatrixElement> Iterator for IdxValueIterator<'a, T> {
-    type Item = (MatrixIdx, &'a T);
-    fn next(&mut self) -> Option<Self::Item> {
-        let count = self.count;
-        let ret = self.matrix.idx_value_from_linidx(count);
-        self.count += 1;
-        ret
-    }
-}
-struct IdxIterator<'a, T: MatrixElement> {
-    count: usize,
-    matrix: &'a Matrix<T>,
-}
-
-impl<'a, T: MatrixElement> IdxIterator<'a, T> {
-    fn new(matrix: &'a Matrix<T>) -> Self {
-        Self { count: 0, matrix }
-    }
-}
-
-impl<T: MatrixElement> Iterator for IdxIterator<'_, T> {
-    type Item = MatrixIdx;
-    fn next(&mut self) -> Option<Self::Item> {
-        let count = self.count;
-        self.count += 1;
-        if count <= self.matrix.data.len() {
-            Some(self.matrix.idx_from_lin(count - 1))
-        } else {
-            None
-        }
-    }
-}
-
-#[derive(Debug)]
-pub(crate) struct Matrix<T>
-where
-    T: MatrixElement,
-{
-    data: Vec<T>,
-    width: usize,
-}
-impl<'a, T> Matrix<T>
-where
-    T: MatrixElement,
-{
-    fn linidx(&self, idx: &MatrixIdx) -> usize {
-        idx.row * self.width + idx.col
-    }
-    fn is_valid_idx(&self, idx: &MatrixIdx) -> bool {
-        let h = self.height();
-        let w = self.width();
-
-        idx.col < w && idx.row < h
-    }
-    fn try_linidx(&self, idx: &MatrixIdx) -> Option<usize> {
-        if self.is_valid_idx(idx) {
-            Some(self.linidx(idx))
-        } else {
-            None
-        }
-    }
-    fn get_lin(&self, linidx: usize) -> Option<&T> {
-        self.data.get(linidx)
-    }
-    pub fn try_from_str(input: &str) -> Option<Self> {
-        let mut data = Vec::new();
-        let mut width: Option<usize> = None;
-        for line in input.lines() {
-            let mut line_len = 0;
-            for c in line.chars() {
-                if let Some(a) = T::try_from_char(&c) {
-                    data.push(a);
-                    line_len += 1;
-                }
-            }
-            let width = width.get_or_insert(line_len);
-            if *width != line_len {
-                return None;
-            }
-        }
-        width.map(|width| Self { data, width })
-    }
-    fn idx_from_lin(&self, linidx: usize) -> MatrixIdx {
-        MatrixIdx {
-            row: (linidx / self.width),
-            col: (linidx % self.width),
-        }
-    }
-    fn idx_value_from_linidx(&self, linidx: usize) -> Option<(MatrixIdx, &T)> {
-        self.get_lin(linidx).map(|elem| (self.idx_from_lin(linidx), elem))
-    }
-    pub fn height(&self) -> usize {
-        self.data.len() / self.width
-    }
-    pub fn width(&self) -> usize {
-        self.width
-    }
-
-    pub fn get(&self, idx: &MatrixIdx) -> Option<&T> {
-        self.try_linidx(idx).and_then(|idx| self.get_lin(idx))
-    }
-
-    fn shape(&self) -> (usize, usize) {
-        (self.height(), self.width)
-    }
-    pub fn get_wrapped(&self, idx: &MatrixIdx) -> &T {
-        let MatrixIdx { row, col } = idx;
-        let (height, width) = self.shape();
-
-        &self[MatrixIdx {
-            row: row.rem_euclid(height),
-            col: col.rem_euclid(width),
-        }]
-    }
-    pub fn idx_value_iter(&'a self) -> IdxValueIterator<'a, T> {
-        IdxValueIterator::new(self)
-    }
-    /// Returns the indizes of this [`Matrix<T>`].
-    pub fn indizes(&'a self) -> IdxIterator<'a, T> {
-        IdxIterator::new(self)
-    }
-}
-
-impl<T> Index<MatrixIdx> for Matrix<T>
-where
-    T: MatrixElement,
-{
-    type Output = T;
-
-    fn index(&self, index: MatrixIdx) -> &Self::Output {
-        &self.data[self.linidx(&index)]
-    }
-}
-impl<T> Index<&MatrixIdx> for Matrix<T>
-where
-    T: MatrixElement,
-{
-    type Output = T;
-
-    fn index(&self, index: &MatrixIdx) -> &Self::Output {
-        &self.data[self.linidx(index)]
-    }
-}
-
-impl<T> IndexMut<&MatrixIdx> for Matrix<T>
-where
-    T: MatrixElement,
-{
-    fn index_mut(&mut self, index: &MatrixIdx) -> &mut Self::Output {
-        self.data.index_mut(self.linidx(index))
-    }
-}
-impl<T> IndexMut<MatrixIdx> for Matrix<T>
-where
-    T: MatrixElement,
-{
-    fn index_mut(&mut self, index: MatrixIdx) -> &mut Self::Output {
-        self.data.index_mut(self.linidx(&index))
-    }
-}
+use adventofcode2024::matrix::{FromChar, Matrix, MatrixElement, MatrixIdx, MatrixIdxOffset};
+use adventofcode2024::util::load_file;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 enum XmasItems {
@@ -206,33 +20,6 @@ impl XmasItems {
     }
 }
 
-impl Add<&MatrixIdxOffset> for &MatrixIdx {
-    type Output = MatrixIdx;
-    fn add(self, rhs: &MatrixIdxOffset) -> Self::Output {
-        MatrixIdx {
-            col: (self.col as i64 + rhs.cols) as usize,
-            row: (self.row as i64 + rhs.rows) as usize,
-        }
-    }
-}
-impl Add<&MatrixIdxOffset> for MatrixIdx {
-    type Output = MatrixIdx;
-    fn add(self, rhs: &MatrixIdxOffset) -> Self::Output {
-        MatrixIdx {
-            col: (self.col as i64 + rhs.cols) as usize,
-            row: (self.row as i64 + rhs.rows) as usize,
-        }
-    }
-}
-impl Add<MatrixIdxOffset> for MatrixIdx {
-    type Output = MatrixIdx;
-    fn add(self, rhs: MatrixIdxOffset) -> Self::Output {
-        MatrixIdx {
-            col: (self.col as i64 + rhs.cols) as usize,
-            row: (self.row as i64 + rhs.rows) as usize,
-        }
-    }
-}
 impl MatrixElement for XmasItems {}
 
 impl FromChar for XmasItems {
@@ -388,6 +175,8 @@ fn main() {
 
 #[cfg(test)]
 mod test {
+    use adventofcode2024::matrix::Matrix;
+
     use crate::check_xmas;
 
     use super::*;
@@ -398,14 +187,12 @@ mod test {
         // ASAMM
         // SXMSX
         let matrix = Matrix::<XmasItems>::try_from_str("XMASS\nMMSAA\nASAMM\nSXMSX").unwrap();
-        assert!(
-            check_xmas(
-                &matrix,
-                XmasItems::M,
-                MatrixIdx::new(0, 0),
-                MatrixIdxOffset::new(0, 1)
-            )
-        );
+        assert!(check_xmas(
+            &matrix,
+            XmasItems::M,
+            MatrixIdx::new(0, 0),
+            MatrixIdxOffset::new(0, 1)
+        ));
         assert!(check_xmas(
             &matrix,
             XmasItems::M,
