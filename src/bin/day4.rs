@@ -327,11 +327,8 @@ fn check_xmas(
             })
     })
 }
-
-fn main() {
-    let input_text = load_file(4, 1, false).expect("failed to load input text file");
-    let matrix =
-        Matrix::<XmasItems>::try_from_str(&input_text).expect("parsing into matrix failed");
+fn part1(content: &str) -> i32 {
+    let matrix = Matrix::<XmasItems>::try_from_str(&content).expect("parsing into matrix failed");
     let mut solution = 0;
     for (idx, value) in matrix.idx_value_iter() {
         if value == &XmasItems::X {
@@ -343,6 +340,50 @@ fn main() {
             }
         }
     }
+    solution
+}
+fn part2(content: &str) -> i32 {
+    let matrix = Matrix::<XmasItems>::try_from_str(&content).expect("parsing into matrix failed");
+    let mut solution = 0;
+    for (idx, value) in matrix.idx_value_iter() {
+        if value == &XmasItems::A {
+            let expected = XmasItems::M;
+            let down_diag_mas = check_xmas(
+                &matrix,
+                expected,
+                idx + MatrixIdxOffset::new(2, 2),
+                MatrixIdxOffset::new(-1, -1),
+            ) || check_xmas(
+                &matrix,
+                expected,
+                idx + MatrixIdxOffset::new(-2, -2),
+                MatrixIdxOffset::new(1, 1),
+            );
+            let up_diag_mas = check_xmas(
+                &matrix,
+                expected,
+                idx + MatrixIdxOffset::new(-2, 2),
+                MatrixIdxOffset::new(1, -1),
+            ) || check_xmas(
+                &matrix,
+                expected,
+                idx + MatrixIdxOffset::new(2, -2),
+                MatrixIdxOffset::new(-1, 1),
+            );
+            if up_diag_mas && down_diag_mas {
+                solution += 1;
+            }
+        }
+    }
+    solution
+}
+fn main() {
+    let content = load_file(4, 1, false).expect("failed to load input text file");
+    let solution = part1(&content);
+    dbg!(solution);
+
+    let content = load_file(4, 1, false).expect("failed to load input text file");
+    let solution = part2(&content);
     dbg!(solution);
 }
 
