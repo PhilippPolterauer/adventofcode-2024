@@ -1,6 +1,6 @@
 use nalgebra::{DMatrix, DVector, Vector3};
 use std::collections::{HashMap, HashSet};
-use std::ops::{Add, Mul};
+use std::ops::Add;
 use std::ops::{Index, IndexMut};
 pub fn parse_vec3(string: &str) -> Vector3<i64> {
     Vector3::from_iterator(

@@ -14,7 +14,7 @@ fn part1() -> i32 {
             }
         }
     }
-    return solution;
+    solution
 }
 // write a tokenizer where i can decleratively declare tokens the can appear within a text
 #[derive(Debug)]
@@ -71,7 +71,7 @@ fn part2() -> i32 {
         solution += change;
         enabled = next;
     }
-    return solution;
+    solution
 }
 
 fn main() {

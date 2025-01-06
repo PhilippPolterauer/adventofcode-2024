@@ -1,5 +1,4 @@
-use core::time;
-use std::{collections::HashMap, time::Instant};
+use std::time::Instant;
 
 use adventofcode2024::util;
 
@@ -18,7 +17,7 @@ fn is_safe(line: &[i32]) -> bool {
         }
         a = *b;
     }
-    return true;
+    true
 }
 fn is_safe2(line: &[i32], skip: Option<usize>) -> bool {
     let mut a: Option<i32> = None;
@@ -48,7 +47,7 @@ fn is_safe2(line: &[i32], skip: Option<usize>) -> bool {
         }
         a = Some(*b);
     }
-    return true;
+    true
 }
 fn part1() {
     let input = util::load_file(2, 1, false).unwrap();
@@ -86,7 +85,7 @@ fn is_safe_corr(line: &[i32]) -> bool {
             return true;
         }
     }
-    return false;
+    false
 }
 fn part2corr() {
     let input = util::load_file(2, 2, false).unwrap();

@@ -46,7 +46,7 @@ impl<'a, T: MatrixElement> IdxIterator<'a, T> {
     }
 }
 
-impl<'a, T: MatrixElement> Iterator for IdxIterator<'a, T> {
+impl<T: MatrixElement> Iterator for IdxIterator<'_, T> {
     type Item = MatrixIdx;
     fn next(&mut self) -> Option<Self::Item> {
         let count = self.count;
@@ -106,7 +106,7 @@ where
                 return None;
             }
         }
-        width.and_then(|width| Some(Self { data, width }))
+        width.map(|width| Self { data, width })
     }
     fn idx_from_lin(&self, linidx: usize) -> MatrixIdx {
         MatrixIdx {
@@ -115,8 +115,7 @@ where
         }
     }
     fn idx_value_from_linidx(&self, linidx: usize) -> Option<(MatrixIdx, &T)> {
-        self.get_lin(linidx)
-            .and_then(|elem| Some((self.idx_from_lin(linidx), elem)))
+        self.get_lin(linidx).map(|elem| (self.idx_from_lin(linidx), elem))
     }
     pub fn height(&self) -> usize {
         self.data.len() / self.width
@@ -167,7 +166,7 @@ where
     type Output = T;
 
     fn index(&self, index: &MatrixIdx) -> &Self::Output {
-        &self.data[self.linidx(&index)]
+        &self.data[self.linidx(index)]
     }
 }
 
@@ -176,7 +175,7 @@ where
     T: MatrixElement,
 {
     fn index_mut(&mut self, index: &MatrixIdx) -> &mut Self::Output {
-        self.data.index_mut(self.linidx(&index))
+        self.data.index_mut(self.linidx(index))
     }
 }
 impl<T> IndexMut<MatrixIdx> for Matrix<T>
@@ -328,7 +327,7 @@ fn check_xmas(
     })
 }
 fn part1(content: &str) -> i32 {
-    let matrix = Matrix::<XmasItems>::try_from_str(&content).expect("parsing into matrix failed");
+    let matrix = Matrix::<XmasItems>::try_from_str(content).expect("parsing into matrix failed");
     let mut solution = 0;
     for (idx, value) in matrix.idx_value_iter() {
         if value == &XmasItems::X {
@@ -343,7 +342,7 @@ fn part1(content: &str) -> i32 {
     solution
 }
 fn part2(content: &str) -> i32 {
-    let matrix = Matrix::<XmasItems>::try_from_str(&content).expect("parsing into matrix failed");
+    let matrix = Matrix::<XmasItems>::try_from_str(content).expect("parsing into matrix failed");
     let mut solution = 0;
     for (idx, value) in matrix.idx_value_iter() {
         if value == &XmasItems::A {
@@ -399,14 +398,13 @@ mod test {
         // ASAMM
         // SXMSX
         let matrix = Matrix::<XmasItems>::try_from_str("XMASS\nMMSAA\nASAMM\nSXMSX").unwrap();
-        assert_eq!(
+        assert!(
             check_xmas(
                 &matrix,
                 XmasItems::M,
                 MatrixIdx::new(0, 0),
                 MatrixIdxOffset::new(0, 1)
-            ),
-            true
+            )
         );
         assert!(check_xmas(
             &matrix,
