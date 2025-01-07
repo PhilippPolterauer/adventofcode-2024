@@ -109,7 +109,7 @@ fn main() {
         // dbg!(dtcorr);
         let tstart = Instant::now();
         part2();
-        let dtfast = Instant::now() - tstart;
+        let _dtfastt = Instant::now() - tstart;
         // dbg!(dtfast);
     }
 }
