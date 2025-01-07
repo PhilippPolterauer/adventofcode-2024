@@ -125,3 +125,13 @@ where
         adjacency
     }
 }
+
+pub fn get_day() -> i32 {
+    let args: Vec<String> = std::env::args().collect();
+    let filename = std::path::Path::new(&args[0])
+        .file_stem()
+        .and_then(|name| name.to_str())
+        .unwrap();
+
+    filename[3..].parse().unwrap()
+}
