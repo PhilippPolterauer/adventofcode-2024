@@ -8,6 +8,12 @@ struct Equation {
     rhs: Vec<usize>,
 }
 
+enum Outcome {
+    High,
+    Solved,
+    Low,
+}
+
 enum Operator {
     Add,
     Mul,
@@ -104,9 +110,67 @@ fn part1(content: &str) -> usize {
     solution
 }
 
-fn part2(content: &str) -> usize {
-    0
+fn compute_min_max(rhs: &[usize]) -> (usize, usize) {
+    let mut min = rhs[0];
+    let mut max = rhs[0];
+    for b in rhs.iter().skip(1) {
+        if b == &1 {
+            max += 1;
+        } else {
+            if min == 1 {
+                min = *b;
+            }
+            if max == 1 {
+                max = b + 1;
+            }
+        }
+    }
+    (min, max)
 }
+
+fn is_seperable(acumulate: usize, rhs: usize) -> Option<usize> {
+    let base = 10usize;
+    let modul = base.pow(rhs.ilog10() + 1);
+    let num = acumulate - rhs;
+    let (lhs, ret) = (num / modul, (num % modul) == 0);
+    //dbg!(&ret, &acumulate, &rhs, &lhs, &num, &modul);
+    ret.then_some(lhs)
+}
+fn is_factor(acumulate: usize, rhs: usize) -> Option<usize> {
+    let (lhs, ret) = (acumulate / rhs, (acumulate % rhs) == 0);
+    ret.then_some(lhs)
+}
+
+fn solve_recursive(acumulate: usize, rhss: &[usize]) -> bool {
+    let rhs = rhss[0];
+    if rhss.len() == 1 {
+        return rhs == acumulate;
+    }
+    if acumulate < rhs {
+        return false;
+    }
+    let rhss = &rhss[1..];
+    is_seperable(acumulate, rhs).is_some_and(|lhs| solve_recursive(lhs, rhss))
+        || is_factor(acumulate, rhs).is_some_and(|lhs| solve_recursive(lhs, rhss))
+        || solve_recursive(acumulate - rhs, rhss)
+}
+
+fn part2(content: &str) -> usize {
+    let mut solution = 0;
+    let equations = content
+        .lines()
+        .filter_map(|line| Equation::parse(line))
+        .collect::<Vec<Equation>>();
+    for eq in equations {
+        let mut rhss = eq.rhs;
+        rhss.reverse();
+        if solve_recursive(eq.lhs, &rhss) {
+            solution += eq.lhs;
+        }
+    }
+    solution
+}
+
 fn main() {
     let day_num = util::get_day();
     let content = util::load_file(day_num, 1, false).expect("failed to load input text file");
