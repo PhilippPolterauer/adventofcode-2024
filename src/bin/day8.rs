@@ -4,7 +4,7 @@ use std::{
 };
 
 use adventofcode2024::{
-    matrix::{FromChar, Matrix, MatrixElement, MatrixIdx},
+    matrix::{FromChar, Matrix, MatrixElement, MatrixIdx, MatrixIdxOffset},
     util,
 };
 
@@ -17,6 +17,17 @@ impl FromChar for Char {
     }
 }
 impl MatrixElement for Char {}
+
+pub fn gcd(mut n: i64, mut m: i64) -> i64 {
+    assert!(n != 0 && m != 0);
+    while m != 0 {
+        if m < n {
+            std::mem::swap(&mut m, &mut n);
+        }
+        m %= n;
+    }
+    n
+}
 
 fn part1(content: &str) -> usize {
     let grid = Matrix::<Char>::try_from_str(content).unwrap();
@@ -46,8 +57,40 @@ fn part1(content: &str) -> usize {
     antiodes.len()
 }
 fn part2(content: &str) -> usize {
-    let mut solution = 0;
-    solution
+    let grid = Matrix::<Char>::try_from_str(content).unwrap();
+    let mut antiodes = HashSet::new();
+    let mut antennas = HashMap::<Char, Vec<MatrixIdx>>::new();
+    for (idx, elem) in grid.idx_value_iter() {
+        if elem == &Char('.') {
+            continue;
+        }
+        let entry = antennas.entry(*elem).or_insert(Vec::new());
+
+        for other in entry.iter() {
+            let delta = other - idx;
+            let fac = gcd(delta.cols.abs(), delta.rows.abs());
+
+            let delta = MatrixIdxOffset {
+                cols: delta.cols / fac,
+                rows: delta.rows / fac,
+            };
+
+            let mut a = idx;
+            while grid.is_valid_idx(&a) {
+                antiodes.insert(a);
+                a = a - delta;
+            }
+
+            a = idx + delta;
+            while grid.is_valid_idx(&a) {
+                antiodes.insert(a);
+                a = a + delta;
+            }
+        }
+        entry.push(idx);
+    }
+
+    antiodes.len()
 }
 
 fn main() {
