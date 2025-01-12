@@ -42,6 +42,42 @@ fn find_heads(start: &MatrixIdx, grid: &Matrix<u8>, dir: &Direction) -> Vec<Matr
     }
 }
 
+fn find_trails(start: &MatrixIdx, grid: &Matrix<u8>, dir: &Direction) -> usize {
+    let next_idx = start + &offset(dir);
+    let prev = grid.get(&start);
+    let next = grid.get(&next_idx);
+    match (prev, next) {
+        (Some(prev), Some(next)) => {
+            if *next == prev + 1 {
+                if *next == 9 {
+                    1
+                } else {
+                    find_trails(&next_idx, &grid, &Direction::Up)
+                        + find_trails(&next_idx, &grid, &Direction::Down)
+                        + find_trails(&next_idx, &grid, &Direction::Left)
+                        + find_trails(&next_idx, &grid, &Direction::Right)
+                }
+            } else {
+                0
+            }
+        }
+        _ => 0,
+    }
+}
+fn part2(content: &str) -> usize {
+    let mut solution = 0;
+    let grid = Matrix::<u8>::try_from_str_with(content, |c| c.to_digit(10).map(|c| c as u8))
+        .expect("parsing matrix failed");
+
+    let starts = grid.find_all(&0);
+    for start in starts {
+        solution += find_trails(&start, &grid, &Direction::Up)
+            + find_trails(&start, &grid, &Direction::Right)
+            + find_trails(&start, &grid, &Direction::Down)
+            + find_trails(&start, &grid, &Direction::Left)
+    }
+    solution
+}
 fn part1(content: &str) -> usize {
     let mut solution = 0;
     let grid = Matrix::<u8>::try_from_str_with(content, |c| c.to_digit(10).map(|c| c as u8))
@@ -59,13 +95,9 @@ fn part1(content: &str) -> usize {
         .into_iter()
         .collect();
         let score = heads.len();
-        println!("{:?}: {:?}", start, score);
         solution += score;
     }
     solution
-}
-fn part2(content: &str) -> usize {
-    0
 }
 
 fn main() {
