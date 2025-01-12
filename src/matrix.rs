@@ -57,7 +57,7 @@ use std::ops::{Add, Index, IndexMut, Sub};
 pub trait FromChar: Sized {
     fn try_from_char(char: &char) -> Option<Self>;
 }
-pub trait MatrixElement: FromChar + Clone + PartialEq {}
+pub trait MatrixElement = Clone + PartialEq;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct MatrixIdxOffset {
@@ -144,7 +144,28 @@ where
     pub fn get_lin(&self, linidx: usize) -> Option<&T> {
         self.data.get(linidx)
     }
-    pub fn try_from_str(input: &str) -> Option<Self> {
+    pub fn try_from_str_with(input: &str, parse: fn(&char) -> Option<T>) -> Option<Self> {
+        let mut data = Vec::new();
+        let mut width: Option<usize> = None;
+        for line in input.lines() {
+            let mut line_len = 0;
+            for c in line.chars() {
+                if let Some(a) = parse(&c) {
+                    data.push(a);
+                    line_len += 1;
+                }
+            }
+            let width = width.get_or_insert(line_len);
+            if *width != line_len {
+                return None;
+            }
+        }
+        width.map(|width| Self { data, width })
+    }
+    pub fn try_from_str(input: &str) -> Option<Self>
+    where
+        T: FromChar,
+    {
         let mut data = Vec::new();
         let mut width: Option<usize> = None;
         for line in input.lines() {
@@ -216,6 +237,16 @@ where
     pub fn get_mut(&mut self, index: &MatrixIdx) -> Option<&mut T> {
         self.try_linidx(index)
             .and_then(|index| self.data.get_mut(index))
+    }
+
+    pub fn find_all(&self, value: &T) -> Vec<MatrixIdx> {
+        let mut ret = Vec::new();
+        for (i, val) in self.idx_value_iter() {
+            if val == value {
+                ret.push(i);
+            }
+        }
+        ret
     }
 }
 
