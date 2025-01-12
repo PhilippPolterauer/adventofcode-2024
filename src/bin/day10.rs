@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use adventofcode2024::{
-    matrix::{Direction, FromChar, Matrix, MatrixElement, MatrixIdx, MatrixIdxOffset},
+    matrix::{Direction, Matrix, MatrixElement, MatrixIdx, MatrixIdxOffset},
     util,
 };
 
