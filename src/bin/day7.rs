@@ -1,4 +1,3 @@
-
 use adventofcode2024::util;
 
 #[derive(Debug, PartialEq)]
@@ -80,8 +79,8 @@ impl Equation {
     }
     fn solution_count(&self) -> u32 {
         let base: u32 = 2;
-        let num = base.pow((self.rhs.len() - 1) as u32);
-        num
+
+        base.pow((self.rhs.len() - 1) as u32)
     }
     fn check_solvable(&self) -> bool {
         for num in 0..self.solution_count() {
@@ -89,14 +88,14 @@ impl Equation {
                 return true;
             }
         }
-        return false;
+        false
     }
 }
 fn part1(content: &str) -> usize {
     let mut solution = 0;
     let equations = content
         .lines()
-        .filter_map(|line| Equation::parse(line))
+        .filter_map(Equation::parse)
         .collect::<Vec<Equation>>();
     for eq in equations {
         let base = 3u32;
@@ -127,38 +126,38 @@ fn compute_min_max(rhs: &[usize]) -> (usize, usize) {
     (min, max)
 }
 
-fn is_seperable(acumulate: usize, rhs: usize) -> Option<usize> {
+fn is_separable(accumulate: usize, rhs: usize) -> Option<usize> {
     let base = 10usize;
-    let modul = base.pow(rhs.ilog10() + 1);
-    let num = acumulate - rhs;
-    let (lhs, ret) = (num / modul, (num % modul) == 0);
-    //dbg!(&ret, &acumulate, &rhs, &lhs, &num, &modul);
+    let module = base.pow(rhs.ilog10() + 1);
+    let num = accumulate - rhs;
+    let (lhs, ret) = (num / module, (num % module) == 0);
+    //dbg!(&ret, &accumulate, &rhs, &lhs, &num, &module);
     ret.then_some(lhs)
 }
-fn is_factor(acumulate: usize, rhs: usize) -> Option<usize> {
-    let (lhs, ret) = (acumulate / rhs, (acumulate % rhs) == 0);
+fn is_factor(accumulate: usize, rhs: usize) -> Option<usize> {
+    let (lhs, ret) = (accumulate / rhs, (accumulate % rhs) == 0);
     ret.then_some(lhs)
 }
 
-fn solve_recursive(acumulate: usize, rhss: &[usize]) -> bool {
+fn solve_recursive(accumulate: usize, rhss: &[usize]) -> bool {
     let rhs = rhss[0];
     if rhss.len() == 1 {
-        return rhs == acumulate;
+        return rhs == accumulate;
     }
-    if acumulate < rhs {
+    if accumulate < rhs {
         return false;
     }
     let rhss = &rhss[1..];
-    is_seperable(acumulate, rhs).is_some_and(|lhs| solve_recursive(lhs, rhss))
-        || is_factor(acumulate, rhs).is_some_and(|lhs| solve_recursive(lhs, rhss))
-        || solve_recursive(acumulate - rhs, rhss)
+    is_separable(accumulate, rhs).is_some_and(|lhs| solve_recursive(lhs, rhss))
+        || is_factor(accumulate, rhs).is_some_and(|lhs| solve_recursive(lhs, rhss))
+        || solve_recursive(accumulate - rhs, rhss)
 }
 
 fn part2(content: &str) -> usize {
     let mut solution = 0;
     let equations = content
         .lines()
-        .filter_map(|line| Equation::parse(line))
+        .filter_map(Equation::parse)
         .collect::<Vec<Equation>>();
     for eq in equations {
         let mut rhss = eq.rhs;
@@ -182,7 +181,6 @@ fn main() {
 #[cfg(test)]
 mod test {
     use super::*;
-    
 
     #[test]
     fn test_parse() {
@@ -213,7 +211,7 @@ mod test {
                 rhs: vec![1, 2, 3, 1, 5, 6]
             }
             .min(),
-            ((1 * 2) + 3) * 1 + 5 + 6
+            (2 + 3) + 5 + 6
         )
     }
 }

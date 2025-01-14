@@ -24,7 +24,7 @@ fn blink(stone: &str) -> Vec<String> {
 fn do_step(stones: &[String]) -> Vec<String> {
     let mut new_stones = Vec::new();
     for stone in stones {
-        new_stones.extend(blink(&stone));
+        new_stones.extend(blink(stone));
     }
     new_stones
 }
@@ -107,7 +107,7 @@ mod test {
     use super::*;
     #[test]
     fn test_mem() {
-        let stones = vec![125, 17];
+        let stones = [125, 17];
 
         let mut mem = MemoizedStones::new();
         let sol = mem.count_stones(stones[0], 25) + mem.count_stones(stones[1], 25);

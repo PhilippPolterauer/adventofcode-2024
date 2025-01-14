@@ -21,7 +21,6 @@ impl FromChar for LabTile {
         }
     }
 }
-impl MatrixElement for LabTile {}
 fn idx_offset(dir: &Direction) -> MatrixIdxOffset {
     use Direction::*;
     let (rows, cols) = match dir {
@@ -184,7 +183,7 @@ mod test {
         let floor = Matrix::<LabTile>::try_from_str(&content).expect("parsing into matrix failed");
         for (row, col, dir) in loops {
             let start = MatrixIdx::new(row, col);
-            assert_eq!(path_has_loop(&floor, start, dir), true)
+            assert!(path_has_loop(&floor, start, dir))
         }
     }
 }

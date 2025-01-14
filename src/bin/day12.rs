@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
+    collections::{HashSet, VecDeque},
     usize,
 };
 
@@ -30,10 +30,8 @@ fn find_plot(grid: &Matrix<char>, start: MatrixIdx) -> HashSet<MatrixIdx> {
         for dir in [Up, Right, Down, Left] {
             let next_idx = tile + offset(&dir);
             if let Some(next) = grid.get(&next_idx) {
-                if *next == kind {
-                    if plot.insert(next_idx) {
-                        front.push_back(next_idx);
-                    }
+                if *next == kind && plot.insert(next_idx) {
+                    front.push_back(next_idx);
                 }
             }
         }
@@ -74,11 +72,12 @@ fn part1(content: &str) -> usize {
     solution
 }
 fn part2(content: &str) -> usize {
-    let stones: Vec<usize> = content
-        .split(' ')
-        .filter_map(|s| s.trim().parse().ok())
-        .collect();
+    let grid = Matrix::<char>::try_from_str_with(content, |c| Some(*c)).unwrap();
     let mut solution = 0;
+    let plots = find_plots(&grid);
+    for p in plots {
+        solution += p.len() * find_perimeter(&p);
+    }
     solution
 }
 
@@ -94,7 +93,7 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    
     #[test]
     fn test_mem() {}
 }

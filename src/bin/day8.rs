@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    ops::Add,
-};
+use std::collections::{HashMap, HashSet};
 
 use adventofcode2024::{
     matrix::{FromChar, Matrix, MatrixElement, MatrixIdx, MatrixIdxOffset},
@@ -36,7 +33,7 @@ fn part1(content: &str) -> usize {
         if elem == &Char('.') {
             continue;
         }
-        let entry = antennas.entry(*elem).or_insert(Vec::new());
+        let entry = antennas.entry(*elem).or_default();
 
         for other in entry.iter() {
             let delta = other - idx;
@@ -63,7 +60,7 @@ fn part2(content: &str) -> usize {
         if elem == &Char('.') {
             continue;
         }
-        let entry = antennas.entry(*elem).or_insert(Vec::new());
+        let entry = antennas.entry(*elem).or_default();
 
         for other in entry.iter() {
             let delta = other - idx;
@@ -103,8 +100,8 @@ fn main() {
 }
 #[cfg(test)]
 mod test {
-    use super::*;
-    use adventofcode2024::util;
+    
+    
 
     #[test]
     fn test_parse() {}

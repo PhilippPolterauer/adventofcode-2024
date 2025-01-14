@@ -123,21 +123,19 @@ fn part2(content: &str) -> usize {
             if space_size == file_size {
                 //println!("spwapping {:?} with {:?}", &disk[idx], &disk[space_idx]);
                 disk.swap(idx, space_idx);
+            } else if let Some(DiskObjects::Space(size)) = disk.get_mut(space_idx) {
+                *size = file_size;
+                //println!("{:?}", &disk[space_idx]);
+                disk.insert(space_idx, DiskObjects::Space(space_size - file_size));
+                //println!("after insert {:?}", &disk[space_idx]);
+                //println!(
+                //"spwapping 2nd {:?} with {:?}",
+                //    &disk[idx],
+                //    &disk[space_idx + 1]
+                //);
+                disk.swap(idx, space_idx + 1);
             } else {
-                if let Some(DiskObjects::Space(size)) = disk.get_mut(space_idx) {
-                    *size = file_size;
-                    //println!("{:?}", &disk[space_idx]);
-                    disk.insert(space_idx, DiskObjects::Space(space_size - file_size));
-                    //println!("after insert {:?}", &disk[space_idx]);
-                    //println!(
-                    //"spwapping 2nd {:?} with {:?}",
-                    //    &disk[idx],
-                    //    &disk[space_idx + 1]
-                    //);
-                    disk.swap(idx, space_idx + 1);
-                } else {
-                    panic!("we should not get here");
-                }
+                panic!("we should not get here");
             }
         }
         //println!("{:?}", disk.clone().reverse());

@@ -20,7 +20,6 @@ impl XmasItems {
     }
 }
 
-impl MatrixElement for XmasItems {}
 
 impl FromChar for XmasItems {
     fn try_from_char(char: &char) -> Option<Self> {
