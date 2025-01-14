@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use adventofcode2024::{
-    matrix::{Direction, Matrix, MatrixElement, MatrixIdx, MatrixIdxOffset},
+    matrix::{Direction, Matrix, MatrixIdx, MatrixIdxOffset},
     util,
 };
 
@@ -26,10 +26,12 @@ fn find_heads(start: &MatrixIdx, grid: &Matrix<u8>, dir: &Direction) -> Vec<Matr
                 if *next == 9 {
                     vec![next_idx]
                 } else {
-                    [find_heads(&next_idx, grid, &Direction::Up),
+                    [
+                        find_heads(&next_idx, grid, &Direction::Up),
                         find_heads(&next_idx, grid, &Direction::Down),
                         find_heads(&next_idx, grid, &Direction::Left),
-                        find_heads(&next_idx, grid, &Direction::Right)]
+                        find_heads(&next_idx, grid, &Direction::Right),
+                    ]
                     .concat()
                 }
             } else {
@@ -83,10 +85,12 @@ fn part1(content: &str) -> usize {
 
     let starts = grid.find_all(&0);
     for start in starts {
-        let heads: HashSet<MatrixIdx> = [find_heads(&start, &grid, &Direction::Up),
+        let heads: HashSet<MatrixIdx> = [
+            find_heads(&start, &grid, &Direction::Up),
             find_heads(&start, &grid, &Direction::Right),
             find_heads(&start, &grid, &Direction::Down),
-            find_heads(&start, &grid, &Direction::Left)]
+            find_heads(&start, &grid, &Direction::Left),
+        ]
         .concat()
         .into_iter()
         .collect();

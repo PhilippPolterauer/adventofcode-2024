@@ -106,7 +106,7 @@ impl<T: MatrixElement> Iterator for IdxIterator<'_, T> {
         let count = self.count;
         self.count += 1;
         if count < self.matrix.data.len() {
-            Some(self.matrix.idx_from_lin(count ))
+            Some(self.matrix.idx_from_lin(count))
         } else {
             None
         }

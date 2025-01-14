@@ -61,7 +61,6 @@ enum DiskObjects {
 }
 
 // Noice lets try to write some pseudocode for this problem
-fn replace() {}
 
 fn part2(content: &str) -> usize {
     let numbers: Vec<u32> = content

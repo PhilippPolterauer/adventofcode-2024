@@ -1,4 +1,4 @@
-use adventofcode2024::matrix::{FromChar, Matrix, MatrixElement, MatrixIdx, MatrixIdxOffset};
+use adventofcode2024::matrix::{FromChar, Matrix, MatrixIdx, MatrixIdxOffset};
 use adventofcode2024::util::load_file;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -19,7 +19,6 @@ impl XmasItems {
         }
     }
 }
-
 
 impl FromChar for XmasItems {
     fn try_from_char(char: &char) -> Option<Self> {

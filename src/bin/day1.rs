@@ -53,7 +53,7 @@ fn part2() {
     dbg!(solution);
 }
 
-fn main(){
+fn main() {
     part1();
     part2();
 }

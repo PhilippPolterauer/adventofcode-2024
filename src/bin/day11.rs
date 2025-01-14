@@ -83,7 +83,10 @@ fn part1(content: &str) -> usize {
     stones.len()
 }
 fn part2(content: &str) -> usize {
-    let stones: Vec<usize> = content.split(' ').filter_map(|s| s.trim().parse().ok()).collect();
+    let stones: Vec<usize> = content
+        .split(' ')
+        .filter_map(|s| s.trim().parse().ok())
+        .collect();
     let mut memcnt = MemoizedStones::new();
     let mut solution = 0;
     for stone in stones {

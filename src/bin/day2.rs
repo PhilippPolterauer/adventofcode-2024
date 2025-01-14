@@ -60,7 +60,7 @@ fn part1() {
         }
     }
 
-    // dbg!(solution);
+    dbg!(solution);
 }
 
 fn part2() {
@@ -73,8 +73,7 @@ fn part2() {
             solution += 1;
         }
     }
-
-    // dbg!(solution);
+    dbg!(solution);
 }
 fn is_safe_corr(line: &[i32]) -> bool {
     for index in 0..line.len() {
@@ -98,15 +97,12 @@ fn part2corr() {
         }
     }
 
-    // dbg!(solution);
+    dbg!(solution);
 }
 fn main() {
     for _ in 0..10000 {
         part1();
-        let tcorr = Instant::now();
         part2corr();
-        let dtcorr = Instant::now() - tcorr;
-        // dbg!(dtcorr);
         let tstart = Instant::now();
         part2();
         let _dtfastt = Instant::now() - tstart;

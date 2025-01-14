@@ -6,27 +6,15 @@ struct Equation {
     rhs: Vec<usize>,
 }
 
-enum Outcome {
-    High,
-    Solved,
-    Low,
-}
-
-enum Operator {
-    Add,
-    Mul,
-}
-impl Operator {
-    fn toggle(&self) -> Self {
-        use Operator::*;
-        match self {
-            Add => Mul,
-            Mul => Add,
-        }
-    }
-}
-
 impl Equation {
+    fn check_solvable(&self) -> bool {
+        for num in 0..self.solution_count() {
+            if self.lhs == self.solution_number(num) {
+                return true;
+            }
+        }
+        false
+    }
     fn parse(line: &str) -> Option<Self> {
         line.split_once(": ").and_then(|(lhs, rhs)| {
             if let Ok(lhs) = lhs.parse() {
@@ -40,27 +28,10 @@ impl Equation {
             }
         })
     }
-    fn max(&self) -> usize {
-        let mut sum = self.rhs[0];
-        for b in self.rhs.iter().skip(1) {
-            if sum == 1 || b == &1 {
-                sum += b;
-            } else {
-                sum *= b;
-            }
-        }
-        sum
-    }
-    fn min(&self) -> usize {
-        let mut sum = self.rhs[0];
-        for b in self.rhs.iter().skip(1) {
-            if sum == 1 || b == &1 {
-                sum *= b;
-            } else {
-                sum += b;
-            }
-        }
-        sum
+    fn solution_count(&self) -> u32 {
+        let base: u32 = 2;
+
+        base.pow((self.rhs.len() - 1) as u32)
     }
     fn solution_number(&self, num: u32) -> usize {
         let mut sum = self.rhs[0];
@@ -76,19 +47,6 @@ impl Equation {
 
         //println!("");
         sum
-    }
-    fn solution_count(&self) -> u32 {
-        let base: u32 = 2;
-
-        base.pow((self.rhs.len() - 1) as u32)
-    }
-    fn check_solvable(&self) -> bool {
-        for num in 0..self.solution_count() {
-            if self.lhs == self.solution_number(num) {
-                return true;
-            }
-        }
-        false
     }
 }
 fn part1(content: &str) -> usize {
@@ -106,24 +64,6 @@ fn part1(content: &str) -> usize {
         }
     }
     solution
-}
-
-fn compute_min_max(rhs: &[usize]) -> (usize, usize) {
-    let mut min = rhs[0];
-    let mut max = rhs[0];
-    for b in rhs.iter().skip(1) {
-        if b == &1 {
-            max += 1;
-        } else {
-            if min == 1 {
-                min = *b;
-            }
-            if max == 1 {
-                max = b + 1;
-            }
-        }
-    }
-    (min, max)
 }
 
 fn is_separable(accumulate: usize, rhs: usize) -> Option<usize> {
@@ -190,28 +130,6 @@ mod test {
                 rhs: vec![1, 2, 3, 4, 5, 6]
             }),
             Equation::parse("10: 1 2 3 4 5 6")
-        )
-    }
-    #[test]
-    fn test_max() {
-        assert_eq!(
-            Equation {
-                lhs: 10,
-                rhs: vec![1, 2, 3, 1, 5, 6]
-            }
-            .max(),
-            ((1 + 2) * 3 + 1) * 5 * 6
-        )
-    }
-    #[test]
-    fn test_min() {
-        assert_eq!(
-            Equation {
-                lhs: 10,
-                rhs: vec![1, 2, 3, 1, 5, 6]
-            }
-            .min(),
-            (2 + 3) + 5 + 6
         )
     }
 }

@@ -1,8 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use adventofcode2024::matrix::{
-    Direction, FromChar, Matrix, MatrixElement, MatrixIdx, MatrixIdxOffset,
-};
+use adventofcode2024::matrix::{Direction, FromChar, Matrix, MatrixIdx, MatrixIdxOffset};
 use adventofcode2024::util;
 
 #[derive(Debug, Clone, PartialEq)]

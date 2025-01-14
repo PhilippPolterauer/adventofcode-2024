@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use adventofcode2024::{
-    matrix::{FromChar, Matrix, MatrixElement, MatrixIdx, MatrixIdxOffset},
+    matrix::{FromChar, Matrix, MatrixIdx, MatrixIdxOffset},
     util,
 };
 
@@ -100,8 +100,6 @@ fn main() {
 }
 #[cfg(test)]
 mod test {
-    
-    
 
     #[test]
     fn test_parse() {}
