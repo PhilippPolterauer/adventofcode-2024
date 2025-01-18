@@ -1,10 +1,10 @@
 use adventofcode2024::util;
 fn part1(content: &str) -> i64 {
-    let mut solution = 0;
+    let solution = 0;
     solution
 }
 fn part2(content: &str) -> i64 {
-    let mut solution = 0;
+    let solution = 0;
     solution
 }
 

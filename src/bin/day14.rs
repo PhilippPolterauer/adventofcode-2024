@@ -58,7 +58,6 @@ fn safety_score(positions: &[MatrixIdx], nrows: usize, ncols: usize) -> i64 {
 }
 
 fn part1(content: &str, nrows: usize, ncols: usize) -> i64 {
-    let mut solution = 0;
     let (mut positions, speeds) = parse_input(content);
     for _ in 0..100 {
         step(&mut positions, &speeds, nrows, ncols);
@@ -85,7 +84,7 @@ fn neighbours(pos: &MatrixIdx) -> HashSet<MatrixIdx> {
         [(1, 0), (0, 1), (-1, 0), (0, -1)].map(|(row, col)| pos + &MatrixIdxOffset::new(row, col)),
     )
 }
-fn neighbour_score(positions: &HashSet<MatrixIdx>, nrows: usize, ncols: usize) -> usize {
+fn neighbour_score(positions: &HashSet<MatrixIdx>) -> usize {
     let mut score = 0;
     for pos in positions {
         score += positions.intersection(&neighbours(pos)).count();
@@ -95,16 +94,16 @@ fn neighbour_score(positions: &HashSet<MatrixIdx>, nrows: usize, ncols: usize) -
 fn part2(content: &str, nrows: usize, ncols: usize) -> i64 {
     use std::io::{stdin, stdout, Write};
     let (mut positions, speeds) = parse_input(content);
-    let mut thresh = 400;
+    let thresh = 400;
     let mut count = 0;
-    while true {
+    loop {
         let pos_set: HashSet<_> = positions.iter().map(|x| *x).collect();
         //println!(
         //    "step: {:?}, score: {:?}",
         //    i,
         //    neighbour_score(&pos_set, nrows, ncols)
         //);
-        let score = neighbour_score(&pos_set, nrows, ncols);
+        let score = neighbour_score(&pos_set);
         if score > thresh {
             show(&positions, nrows, ncols);
             dbg!(&count);

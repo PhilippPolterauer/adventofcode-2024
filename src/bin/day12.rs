@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
+    collections::{HashSet, VecDeque},
     usize,
 };
 
@@ -120,7 +120,7 @@ AAAAAA"#;
         let grid = Matrix::<char>::try_from_str_with(content, |c| Some(*c)).unwrap();
         let plots = find_plots(&grid);
 
-        let mut solution = 0;
+        let solution = 0;
         for (c, p) in plots {
             let (per, sides) = find_perimeter(&p);
             if c == 'A' {
