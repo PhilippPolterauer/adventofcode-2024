@@ -89,6 +89,35 @@ impl<'a, T: MatrixElement> Iterator for IdxValueIterator<'a, T> {
         ret
     }
 }
+pub struct RowIterator<'a, T: MatrixElement> {
+    count: usize,
+    matrix: &'a Matrix<T>,
+}
+
+impl<'a, T: MatrixElement> RowIterator<'a, T> {
+    fn new(matrix: &'a Matrix<T>) -> Self {
+        Self { count: 0, matrix }
+    }
+}
+
+impl<'a, T: MatrixElement> Iterator for RowIterator<'a, T> {
+    type Item = &'a [T];
+    fn next(&mut self) -> Option<Self::Item> {
+        let width = self.matrix.width();
+        let count = self.count;
+        self.count += 1;
+        if count < self.matrix.height() {
+            Some(
+                self.matrix
+                    .data
+                    .get((count * width)..((count + 1) * width))
+                    .unwrap(),
+            )
+        } else {
+            None
+        }
+    }
+}
 pub struct IdxIterator<'a, T: MatrixElement> {
     count: usize,
     matrix: &'a Matrix<T>,
@@ -121,12 +150,66 @@ where
     data: Vec<T>,
     width: usize,
 }
+
 impl<'a, T> Matrix<T>
 where
     T: MatrixElement,
 {
-    pub fn linidx(&self, idx: &MatrixIdx) -> usize {
-        idx.row * self.width + idx.col
+    pub fn find(&self, value: &T) -> Option<MatrixIdx> {
+        let and_then = self
+            .data
+            .iter()
+            .position(|val| val == value)
+            .and_then(|linidx| self.try_idx_from_lin(linidx));
+        and_then
+    }
+    pub fn find_all(&self, value: &T) -> Vec<MatrixIdx> {
+        let mut ret = Vec::new();
+        for (i, val) in self.idx_value_iter() {
+            if val == value {
+                ret.push(i);
+            }
+        }
+        ret
+    }
+    pub fn get(&self, idx: &MatrixIdx) -> Option<&T> {
+        self.try_linidx(idx).and_then(|idx| self.get_lin(idx))
+    }
+    pub fn get_lin(&self, linidx: usize) -> Option<&T> {
+        self.data.get(linidx)
+    }
+    pub fn get_mut(&mut self, index: &MatrixIdx) -> Option<&mut T> {
+        self.try_linidx(index)
+            .and_then(|index| self.data.get_mut(index))
+    }
+    pub fn get_wrapped(&self, idx: &MatrixIdx) -> &T {
+        let MatrixIdx { row, col } = idx;
+        let (height, width) = self.shape();
+
+        &self[MatrixIdx {
+            row: row.rem_euclid(height),
+            col: col.rem_euclid(width),
+        }]
+    }
+    pub fn height(&self) -> usize {
+        self.data.len() / self.width
+    }
+    fn idx_from_lin(&self, linidx: usize) -> MatrixIdx {
+        MatrixIdx {
+            row: (linidx / self.width),
+            col: (linidx % self.width),
+        }
+    }
+    fn idx_value_from_linidx(&self, linidx: usize) -> Option<(MatrixIdx, &T)> {
+        self.get_lin(linidx)
+            .map(|elem| (self.idx_from_lin(linidx), elem))
+    }
+    pub fn idx_value_iter(&'a self) -> IdxValueIterator<'a, T> {
+        IdxValueIterator::new(self)
+    }
+    /// Returns the indizes of this [`Matrix<T>`].
+    pub fn indizes(&'a self) -> IdxIterator<'a, T> {
+        IdxIterator::new(self)
     }
     pub fn is_valid_idx(&self, idx: &MatrixIdx) -> bool {
         let h = self.height();
@@ -134,33 +217,17 @@ where
 
         idx.col < w && idx.row < h
     }
-    pub fn try_linidx(&self, idx: &MatrixIdx) -> Option<usize> {
-        if self.is_valid_idx(idx) {
-            Some(self.linidx(idx))
-        } else {
-            None
-        }
+
+    pub fn linidx(&self, idx: &MatrixIdx) -> usize {
+        idx.row * self.width + idx.col
     }
-    pub fn get_lin(&self, linidx: usize) -> Option<&T> {
-        self.data.get(linidx)
+
+    /// Creates a new [`Matrix<T>`].
+    pub fn from(data: Vec<T>, width: usize) -> Self {
+        Self { data, width }
     }
-    pub fn try_from_str_with(input: &str, parse: fn(&char) -> Option<T>) -> Option<Self> {
-        let mut data = Vec::new();
-        let mut width: Option<usize> = None;
-        for line in input.lines() {
-            let mut line_len = 0;
-            for c in line.chars() {
-                if let Some(a) = parse(&c) {
-                    data.push(a);
-                    line_len += 1;
-                }
-            }
-            let width = width.get_or_insert(line_len);
-            if *width != line_len {
-                return None;
-            }
-        }
-        width.map(|width| Self { data, width })
+    fn shape(&self) -> (usize, usize) {
+        (self.height(), self.width)
     }
     pub fn try_from_str(input: &str) -> Option<Self>
     where
@@ -183,70 +250,43 @@ where
         }
         width.map(|width| Self { data, width })
     }
+    pub fn try_from_str_with(input: &str, parse: fn(&char) -> Option<T>) -> Option<Self> {
+        let mut data = Vec::new();
+        let mut width: Option<usize> = None;
+        for line in input.lines() {
+            let mut line_len = 0;
+            for c in line.chars() {
+                if let Some(a) = parse(&c) {
+                    data.push(a);
+                    line_len += 1;
+                }
+            }
+            let width = width.get_or_insert(line_len);
+            if *width != line_len {
+                return None;
+            }
+        }
+        width.map(|width| Self { data, width })
+    }
+
     fn try_idx_from_lin(&self, linidx: usize) -> Option<MatrixIdx> {
         (linidx < self.data.len()).then(|| self.idx_from_lin(linidx))
     }
-    fn idx_from_lin(&self, linidx: usize) -> MatrixIdx {
-        MatrixIdx {
-            row: (linidx / self.width),
-            col: (linidx % self.width),
+
+    pub fn try_linidx(&self, idx: &MatrixIdx) -> Option<usize> {
+        if self.is_valid_idx(idx) {
+            Some(self.linidx(idx))
+        } else {
+            None
         }
     }
-    fn idx_value_from_linidx(&self, linidx: usize) -> Option<(MatrixIdx, &T)> {
-        self.get_lin(linidx)
-            .map(|elem| (self.idx_from_lin(linidx), elem))
-    }
-    pub fn height(&self) -> usize {
-        self.data.len() / self.width
-    }
+
     pub fn width(&self) -> usize {
         self.width
     }
 
-    pub fn get(&self, idx: &MatrixIdx) -> Option<&T> {
-        self.try_linidx(idx).and_then(|idx| self.get_lin(idx))
-    }
-
-    fn shape(&self) -> (usize, usize) {
-        (self.height(), self.width)
-    }
-    pub fn get_wrapped(&self, idx: &MatrixIdx) -> &T {
-        let MatrixIdx { row, col } = idx;
-        let (height, width) = self.shape();
-
-        &self[MatrixIdx {
-            row: row.rem_euclid(height),
-            col: col.rem_euclid(width),
-        }]
-    }
-    pub fn idx_value_iter(&'a self) -> IdxValueIterator<'a, T> {
-        IdxValueIterator::new(self)
-    }
-    /// Returns the indizes of this [`Matrix<T>`].
-    pub fn indizes(&'a self) -> IdxIterator<'a, T> {
-        IdxIterator::new(self)
-    }
-
-    pub fn find(&self, value: &T) -> Option<MatrixIdx> {
-        self.data
-            .iter()
-            .position(|val| val == value)
-            .and_then(|linidx| self.try_idx_from_lin(linidx))
-    }
-
-    pub fn get_mut(&mut self, index: &MatrixIdx) -> Option<&mut T> {
-        self.try_linidx(index)
-            .and_then(|index| self.data.get_mut(index))
-    }
-
-    pub fn find_all(&self, value: &T) -> Vec<MatrixIdx> {
-        let mut ret = Vec::new();
-        for (i, val) in self.idx_value_iter() {
-            if val == value {
-                ret.push(i);
-            }
-        }
-        ret
+    pub fn rows(&'a self) -> RowIterator<'a, T> {
+        RowIterator::new(self)
     }
 }
 
