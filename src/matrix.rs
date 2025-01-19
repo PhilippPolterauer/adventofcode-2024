@@ -363,6 +363,24 @@ impl Sub<MatrixIdx> for MatrixIdx {
         }
     }
 }
+impl Sub<MatrixIdxOffset> for &MatrixIdx {
+    type Output = MatrixIdx;
+    fn sub(self, rhs: MatrixIdxOffset) -> Self::Output {
+        MatrixIdx {
+            col: (self.col as i64 - rhs.cols) as usize,
+            row: (self.row as i64 - rhs.rows) as usize,
+        }
+    }
+}
+impl Sub<&MatrixIdxOffset> for &MatrixIdx {
+    type Output = MatrixIdx;
+    fn sub(self, rhs: &MatrixIdxOffset) -> Self::Output {
+        MatrixIdx {
+            col: (self.col as i64 - rhs.cols) as usize,
+            row: (self.row as i64 - rhs.rows) as usize,
+        }
+    }
+}
 impl Sub<MatrixIdxOffset> for MatrixIdx {
     type Output = MatrixIdx;
     fn sub(self, rhs: MatrixIdxOffset) -> Self::Output {
@@ -384,6 +402,15 @@ impl Sub<&MatrixIdxOffset> for MatrixIdx {
 impl Add<&MatrixIdxOffset> for &MatrixIdx {
     type Output = MatrixIdx;
     fn add(self, rhs: &MatrixIdxOffset) -> Self::Output {
+        MatrixIdx {
+            col: (self.col as i64 + rhs.cols) as usize,
+            row: (self.row as i64 + rhs.rows) as usize,
+        }
+    }
+}
+impl Add<MatrixIdxOffset> for &MatrixIdx {
+    type Output = MatrixIdx;
+    fn add(self, rhs:MatrixIdxOffset) -> Self::Output {
         MatrixIdx {
             col: (self.col as i64 + rhs.cols) as usize,
             row: (self.row as i64 + rhs.rows) as usize,
