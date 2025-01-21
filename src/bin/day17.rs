@@ -98,11 +98,6 @@ fn part2(content: &str) -> i64 {
             }
         }
     }
-    cpu.a = a;
-    cpu.b = 0;
-    cpu.ip = 0;
-    cpu.c = 0;
-    let out = cpu.operate(&instructions);
     a
 }
 
