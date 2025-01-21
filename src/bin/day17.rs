@@ -44,14 +44,11 @@ impl CPU {
                 7 => self.c = self.a / (1 << self.combo(operand)),
                 a => panic!("unexpected combo op '{:?}'", a),
             }
-
-            dbg!(operator, operand, &self);
         }
         out
     }
 }
-
-fn part1(content: &str) -> i64 {
+fn parse_input(content: &str) -> (CPU, Vec<u8>) {
     let (a, b) = content.split_once("\n\n").unwrap();
     let re = Regex::new(
         r"Register A: (\d*)
@@ -60,7 +57,7 @@ Register C: (\d*)",
     )
     .unwrap();
     let m = re.captures(a).unwrap();
-    let mut cpu = CPU::new(
+    let cpu = CPU::new(
         m.get(1).unwrap().as_str().parse().unwrap(),
         m.get(2).unwrap().as_str().parse().unwrap(),
         m.get(3).unwrap().as_str().parse().unwrap(),
@@ -72,18 +69,41 @@ Register C: (\d*)",
         .split(",")
         .filter_map(|s| s.trim().parse().ok())
         .collect();
-
+    (cpu, instructions)
+}
+fn part1(content: &str) -> i64 {
+    let (mut cpu, instructions) = parse_input(content);
     let mut solution = 0;
-    dbg!(&cpu, &instructions);
     let out = cpu.operate(&instructions);
-    dbg!(&out);
     for o in out {
         solution = solution * 10 + o;
     }
     solution
 }
-fn part2(content: &str) -> usize {
-    0
+fn part2(content: &str) -> i64 {
+    let (mut cpu, instructions) = parse_input(content);
+    let mut a = 0;
+    for i in instructions.iter().rev() {
+        a <<= 3;
+        for j in 0..1024 {
+            cpu.a = a + j;
+            cpu.b = 0;
+            cpu.ip = 0;
+            cpu.c = 0;
+            let out = cpu.operate(&instructions[0..instructions.len() - 2]);
+            if out.len() == 1 && out[0] == *i as i64 {
+                println!("{:?}: {:?}", i, j);
+                a = a + j;
+                break;
+            }
+        }
+    }
+    cpu.a = a;
+    cpu.b = 0;
+    cpu.ip = 0;
+    cpu.c = 0;
+    let out = cpu.operate(&instructions);
+    a
 }
 
 fn main() {
