@@ -22,7 +22,7 @@ fn parse(content: &str) -> Vec<MatrixIdx> {
         .lines()
         .filter_map(|line| {
             line.split_once(",")
-                .and_then(|(a, b)| Some(MatrixIdx::new(a.parse().unwrap(), b.parse().unwrap())))
+                .and_then(|(a, b)| Some(MatrixIdx::new(b.parse().unwrap(), a.parse().unwrap())))
         })
         .collect()
 }
@@ -57,9 +57,43 @@ fn part1(content: &str) -> usize {
     }
     costmap[&MatrixIdx::new(height - 1, width - 1)]
 }
-fn part2(content: &str) -> i64 {
-    let solution = 0;
-    solution
+fn part2(content: &str) -> usize {
+    let all_corrupted = parse(content);
+    let start = MatrixIdx::new(0, 0);
+    let width = 71;
+    let height = 71;
+    let end = MatrixIdx::new(height - 1, width - 1);
+
+    for i in 1..all_corrupted.len() {
+        let mut visited = HashSet::from([start]);
+        let mut front = VecDeque::from([start]);
+        let mut connected = false;
+        'outer: while let Some(pos) = front.pop_front() {
+            for dir in ALL_DIRECTIONS {
+                let next = pos + offset(&dir);
+                if next == end {
+                    dbg!("end");
+                    connected = true;
+                    break 'outer;
+                }
+                if !visited.contains(&next)
+                    && next.row < height
+                    && next.col < width
+                    && !all_corrupted[0..i + 1].contains(&next)
+                {
+                    front.push_back(next);
+                    visited.insert(next);
+                }
+            }
+        }
+        if !connected {
+            dbg!(all_corrupted[i]);
+            break;
+        } else {
+            dbg!(i, front);
+        }
+    }
+    0
 }
 
 fn main() {
